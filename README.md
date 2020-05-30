@@ -16,7 +16,7 @@
 ### Subscriber Server安装
   1. 安装Canal Server。（本工具第一版本需要依赖Canal，后面版本会计划内置）Canal地址：https://github.com/alibaba/canal/wiki/QuickStart。
   2. clone本项目，找到**subscriber-server**项目，修改`application.yml`如下：
-  ```java
+  ```yaml
     # canal server (单机客户端配置)
     canal:
       server:
@@ -40,12 +40,29 @@
     <scope>compile</scope>
 </dependency>
 ```
-  2. 在Spring Boot启动类上加入注解`@EnableSubscriber`
-  3. 创建订阅类，实现`com.galen.subscriber.client.DataSync`接口，并加上`@Subscriber`注解，如：
+  2. 在项目配置文件中加入：
+  ```yaml
+subscriber:
+  server:
+    # subscriber server的ip
+    ip: 127.0.0.1
+    # 端口默认8888
+    port: 8888
+    # 如果没有appId则会自动获取到application name
+    appId: subscribe
+```
+  3. 在Spring Boot启动类上加入注解`@EnableSubscriber`
+  4. 创建订阅类，实现`com.galen.subscriber.client.DataSync`接口，并加上`@Subscriber`注解，如：
   ```java
-@Subscriber(db = "database.name", table = "table.name", name = "galen1", contextId = "galenCtxId")
+@Subscriber(db = "db", table = "table", name = "galen1", contextId = "galenCtxId")
 @Slf4j
 public class GalenTableSync implements DataSync {
+    /**
+    * 当数据库“db”的“table”表发生数据变化时，会自动调用此方法。
+    * exchange对象中包含：发生事件的库表、事件类型、变化前后的数据以及更改的字段
+    * @param exchange
+    * @return 
+    */
     @Override
     public ACK doSync(Exchange exchange) {
         System.err.println(exchange.getTableName() + 1);
