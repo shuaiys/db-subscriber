@@ -65,8 +65,8 @@ public class GalenTableSync implements DataSync {
     */
     @Override
     public ACK doSync(Exchange exchange) {
-        System.err.println(exchange.getTableName() + 1);
-        System.err.println(JSON.toJSONString(exchange));
+        log.info(exchange.getTableName());
+        log.info(JSON.toJSONString(exchange));
         return ACK.SUCCESS();
     }
 }
