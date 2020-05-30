@@ -43,7 +43,7 @@
   2. 在Spring Boot启动类上加入注解`@EnableSubscriber`
   3. 创建订阅类，实现`com.galen.subscriber.client.DataSync`接口，并加上`@Subscriber`注解，如：
   ```java
-@Subscriber(db = "minifranchise_dev", table = "n_product_detail", name = "galen1", contextId = "galenTB")
+@Subscriber(db = "database.name", table = "table.name", name = "galen1", contextId = "galenCtxId")
 @Slf4j
 public class GalenTableSync implements DataSync {
     @Override
