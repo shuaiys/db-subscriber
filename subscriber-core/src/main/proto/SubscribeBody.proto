@@ -1,0 +1,62 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+package com.galen.subscriber.core.proto;
+
+option optimize_for = SPEED;
+option java_package = "com.galen.subscriber.core.proto";
+option java_outer_classname = "SubscriberInfoProto";
+
+message SubscriberBody{
+
+    enum DataType {
+        Ack = 0; // ack消息
+        Register = 1; // 注册订阅信息
+        Subscribe = 2; // 数据库发布消息
+        HeartBate = 3; // 心跳
+    }
+
+    DataType type = 1;
+    string classType = 2;
+    oneof dataBody {
+        AckBody ack = 3;
+        RegisterBody rb = 4;
+        SubscribeBody sb = 5;
+        HeartBate hb = 6;
+    }
+}
+
+message AckBody {
+    ACK ack = 1;
+}
+
+message ACK {
+    int32 status = 1;
+    Exchange exchange = 2;
+}
+
+message Exchange {
+    string database = 1;  // 数据库名
+    string tableName = 2;  // 表名
+    int32 eventType = 3;  //事件类型：1-INSERT、2-UPDATE、3-DELETE
+    map<string, google.protobuf.Any> beforeColumns = 4; // 改变之前的字段
+    map<string, google.protobuf.Any> afterColumns = 5; // 改变之后的字段
+    repeated string updateColumns = 6; // 被更改的字段
+    int64 executeTime = 7; // 执行的时间
+    string id = 8; // id = db.table + id
+}
+
+message RegisterBody {
+    map<string, string> registerTable = 1;
+    string appId = 2;
+}
+
+message SubscribeBody {
+    repeated string beanAlias = 1;
+
+    Exchange exchange = 2;
+
+}
+
+message HeartBate {
+    string msg = 1;
+}

@@ -1,0 +1,19 @@
+server:
+  port: 8880
+  tomcat:
+    max-threads: 5
+    max-connections: 10
+    min-spare-threads: 2
+    accept-count: 5
+
+spring:
+  application:
+    name: db-subscriber
+  profiles:
+    active: local
+subscriber:
+  server:
+    ip: 127.0.0.1
+    port: 8888
+    # 如果没有appId则会自动获取到application name
+    appId: subscribe
