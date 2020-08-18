@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
  * @author shuaiys
  * @version 1.0
  * @package com.galen.subscriber.configuration
- * @description canal连接配置
+ * @description canal连接配置,暂未支持多节点集群
  * @date 2020-03-08 22:51
  */
 @Component

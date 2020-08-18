@@ -13,11 +13,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class ThreadPoolConfiguration {
 
-    public final static Integer CORE_POOL_SIZE = 5;
-    public final static Integer MAXIMUM_POOL_SIZE = 10;
-    public final static Long KEEP_ALIVE_TIME = 100L;
+    private final static Integer CORE_POOL_SIZE = 5;
+    private final static Integer MAXIMUM_POOL_SIZE = 10;
+    private final static Long KEEP_ALIVE_TIME = 100L;
+    private final static Integer capacity = 500;
     public static ThreadPoolExecutor executor;
     static {
-        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS, new ArrayBlockingQueue<>(500));
+        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS, new ArrayBlockingQueue<>(capacity));
     }
 }
