@@ -16,6 +16,7 @@ import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.galen.subscriber.server.filter.FilterOrderConstant.INIT;
 
@@ -38,7 +39,7 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
     @Override
     public Result filter(CanalExchange exchange, CanalFilterChain chain) {
         Entry entry = exchange.getEntry();
-        if (null == entry){
+        if (null == entry) {
             return ResultUtil.setError("entry 为空");
         }
         // 将库表信息设置到exchange，传递到链路
@@ -46,7 +47,7 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
         String table = entry.getHeader().getTableName();
         long executeTime = entry.getHeader().getExecuteTime();
         if (StringUtils.isBlank(database) || StringUtils.isBlank(table)) {
-            log.error("初始化失败，db：{}, table: {}", database, table);
+            log.error("初始化失败，database or table is blank");
             return ResultUtil.setError("初始化失败");
         }
         exchange.setDatabase(database);
@@ -58,13 +59,14 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
             exchange.setEventType(change.getEventType());
             setColumns(change, exchange);
         } catch (InvalidProtocolBufferException e) {
-            log.error("获取RowChange失败！", e);
+            e.printStackTrace();
+            log.error("获取RowChange失败！");
         }
         if (exchange.getData().isEmpty()) {
-            log.info("Entry为空，已丢弃");
+            log.debug("Entry为空，已丢弃");
             return ResultUtil.setError("初始化失败");
         }
-        log.info("Entry初始化完成！");
+        log.debug("Entry初始化完成, db:{}, table:{}", database, table);
         return chain.filter(exchange);
     }
 
@@ -92,21 +94,15 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
 
     private Map<String, Object> parseColumnsToMap(List<CanalEntry.Column> columns) {
         Map<String, Object> jsonMap = new HashMap<>();
-        columns.forEach(column -> {
-            if (column != null) {
-                jsonMap.put(column.getName(), column.getValue());
-            }
-        });
+        columns.stream().filter(column -> column != null).forEach(column -> jsonMap.put(column.getName(), column.getValue()));
         return jsonMap;
     }
 
     private Set<String> updateColumns(List<CanalEntry.Column> columns) {
-        Set<String> updates = new HashSet<>();
-        columns.forEach(column -> {
-            if (column != null && column.getUpdated()) {
-                updates.add(column.getName());
-            }
-        });
+        Set<String> updates = columns.stream()
+                .filter(column -> column != null && column.getUpdated())
+                .map(column -> column.getName())
+                .collect(Collectors.toSet());
         return updates;
     }
 }

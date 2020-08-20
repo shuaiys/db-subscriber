@@ -91,6 +91,7 @@ public class SubscribeTableCenter {
      * @param appId
      * @return
      */
+    @Deprecated
     public static Channel getChannelByAppId(String appId) {
         Channel channel = null;
         String channelId = appChannels.search(1L, (k, v) -> {
@@ -151,6 +152,7 @@ public class SubscribeTableCenter {
     public static String geAppId(Channel channel) {
         return appChannels.get(getChannelId(channel));
     }
+
     /**
      * 获取所有的订阅表
      *

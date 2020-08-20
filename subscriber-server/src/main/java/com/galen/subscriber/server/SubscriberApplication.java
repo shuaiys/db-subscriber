@@ -23,6 +23,7 @@ public class SubscriberApplication {
     public static void main(String[] args) {
         SpringApplication.run(SubscriberApplication.class, args);
         try {
+            // 启动netty server
             SubscriberNettyServer.run();
         } catch (InterruptedException e) {
             e.printStackTrace();

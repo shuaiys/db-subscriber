@@ -11,7 +11,7 @@
   db-subscriber能够将这类的数据同步，缓存更新的业务进行解耦，添加一个@Subscriber注解，即能感知到某条数据的变化。
 ## 开始使用
 ### 环境
-  1. `JDK`1.8以上
+  1. `JDK1.8+`
   2. `Spring Boot2.0`以上
   3. `Canal Server 1.1.4`
 ### Subscriber Server安装

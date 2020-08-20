@@ -15,5 +15,5 @@ subscriber:
   server:
     ip: 127.0.0.1
     port: 8888
-    # 如果没有appId则会自动获取到application name
+    # 如果没有appId则会默认为application name
     appId: subscribe
