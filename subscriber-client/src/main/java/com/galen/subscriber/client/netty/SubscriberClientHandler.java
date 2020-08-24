@@ -61,19 +61,18 @@ public class SubscriberClientHandler extends SimpleChannelInboundHandler<Subscri
      */
     private void handleSubscribe(ChannelHandlerContext ctx, SubscriberInfoProto.SubscribeBody sb) {
         ProtocolStringList beanAliasList = sb.getBeanAliasList();
-        ThreadPoolExecutor executor = ClientConstant.executor;
-        // 开启线程将消息分发到具体的bean
-        beanAliasList.forEach(s -> executor.execute(() -> {
+        // 使用parallelStream将消息分发到具体的bean
+        beanAliasList.parallelStream().forEach(s -> {
             Object bean = this.applicationContext.getBean(s);
             if (bean != null) {
                 DataSync ds = (DataSync) bean;
                 ds.doSync(BodyConverter.proto2Exchange(sb.getExchange()));
-                // 无需发送ack，代理对象已经做了
+                // 无需发送ack，交给代理对象
                 // ctx.channel().writeAndFlush(new ACKBody(ack));
             } else {
                 log.error("未找到bean：{}", s);
             }
-        }));
+        });
 
     }
 

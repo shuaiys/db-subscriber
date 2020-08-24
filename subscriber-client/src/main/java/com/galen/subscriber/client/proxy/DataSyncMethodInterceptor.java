@@ -19,7 +19,7 @@ public class DataSyncMethodInterceptor implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-        log.info("接收到同步请求");
+        log.debug("接收到同步请求");
         Object result = methodProxy.invokeSuper(o, objects);
         doSync(result);
         return result;

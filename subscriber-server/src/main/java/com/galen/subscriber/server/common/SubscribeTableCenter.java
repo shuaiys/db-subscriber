@@ -4,15 +4,20 @@ import com.google.common.collect.Sets;
 import io.netty.channel.Channel;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author shuaiys
  * @version 1.0
  * @package com.galen.subscriber.server.common
  * @description 订阅表数据中心
+ *
+ * 用于保存注册的订阅信息，长连接channel，通知的目标bean信息等
+ *
  * @date 2020-05-26 23:47
  */
 public class SubscribeTableCenter {
@@ -181,9 +186,6 @@ public class SubscribeTableCenter {
             }
             if (v.isEmpty()) {
                 tables.remove(k);
-                // TODO 发送事件，更新Canal订阅表
-
-
             }
         });
 
@@ -195,9 +197,6 @@ public class SubscribeTableCenter {
             });
         }
 
-//        if (channelBeans.containsKey(channelId)) {
-//            channelBeans.remove(channelId);
-//        }
     }
 
 
@@ -234,9 +233,6 @@ public class SubscribeTableCenter {
                     bindChannelBean(channelId, k, v);
                 } else {
                     tables.put(v, Sets.newHashSet(channelId));
-                    // TODO 发送事件，更新Canal订阅表
-
-
                     bindChannelBean(channelId, k, v);
                 }
             });

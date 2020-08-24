@@ -28,6 +28,8 @@ public class SubscriberChannelInitializer extends ChannelInitializer<SocketChann
     @Resource
     private SubscriberClientHeartBeatHandler heartBeatHandler;
 
+    private static final int TIMEOUT = 50;
+
     @Override
     protected void initChannel(SocketChannel sc) throws Exception {
         // 使用protobuf编解码
@@ -36,9 +38,10 @@ public class SubscriberChannelInitializer extends ChannelInitializer<SocketChann
                 .addLast(new ProtobufVarint32LengthFieldPrepender())
                 .addLast(new ProtobufEncoder())
                 // 50s内没有应答，断开连接
-                .addLast(new ReadTimeoutHandler(50))
+                .addLast(new ReadTimeoutHandler(TIMEOUT))
                 // 自定义handler
                 .addLast(clientHandler)
+                // 心跳
                 .addLast(heartBeatHandler);
     }
 }

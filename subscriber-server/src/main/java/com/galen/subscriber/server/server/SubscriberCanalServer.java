@@ -47,7 +47,7 @@ public class SubscriberCanalServer implements ApplicationListener<ContextRefresh
     }
 
     // 单次从canal server获取的数量
-    private static Integer MSG_SIZE = 50;
+    private static Integer MSG_SIZE = 100;
 
     @Scheduled(fixedDelay = 1000)
     public void run() {
@@ -57,15 +57,15 @@ public class SubscriberCanalServer implements ApplicationListener<ContextRefresh
             List<CanalEntry.Entry> entries = message.getEntries();
             // 空集合直接跳过
             if (batchId != -1L && entries.size() > 0) {
-                entries.forEach(entry -> {
-                    if (entry.getEntryType().getNumber() == CanalEntry.EntryType.ROWDATA.getNumber()) {
-                        try {
-                            publisher.publishEvent(new CanalEvent(entry, filters));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                entries.parallelStream()
+                        .filter(entry -> entry.getEntryType().getNumber() == CanalEntry.EntryType.ROWDATA.getNumber())
+                        .forEachOrdered(entry -> {
+                            try {
+                                publisher.publishEvent(new CanalEvent(entry, filters));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
             }
             connector.ack(batchId);
         } catch (Exception e) {

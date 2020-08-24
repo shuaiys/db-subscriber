@@ -35,9 +35,7 @@ public class SubscriberNettyClient implements DisposableBean {
     private static Object lock = new Object();
 
     public void connect(SubscriberConfig config) {
-        if (null == config || StringUtils.isBlank(config.getIp()) || null == config.getPort()) {
-            throw new IllegalArgumentException("subscriber.server 未设置或设置不正确");
-        }
+        checkConfig(config);
         ThreadPoolExecutor executor = ClientConstant.executor;
         executor.execute(() -> {
             // 连接服务端
@@ -47,6 +45,12 @@ public class SubscriberNettyClient implements DisposableBean {
                 // ignore
             }
         });
+    }
+
+    private void checkConfig(SubscriberConfig config) {
+        if (null == config || StringUtils.isBlank(config.getIp()) || null == config.getPort()) {
+            throw new IllegalArgumentException("subscriber.server 未设置或设置不正确");
+        }
     }
 
     public void connect(int port, String host) throws InterruptedException {
@@ -78,6 +82,7 @@ public class SubscriberNettyClient implements DisposableBean {
                             // ignore
                         }
                         try {
+                            log.info("客户端重连...");
                             connect(port, host);
                         } catch (InterruptedException e) {
                             e.printStackTrace();

@@ -65,6 +65,10 @@ public class SubscribeTableRegister implements ApplicationListener<ContextRefres
         connectServer();
     }
 
+    /**
+     * 已经废弃该方法
+     * @return
+     */
     private Channel getChannel() {
         Channel channel = ClientConstant.ctx.channel();
         if (channel == null) {

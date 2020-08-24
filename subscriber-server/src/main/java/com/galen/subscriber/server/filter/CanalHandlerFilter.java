@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * @author shuaiys
@@ -31,24 +32,20 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
 
     private static final String RELATION = "##";
 
-
     @Override
     public Result filter(CanalExchange exchange, CanalFilterChain chain) {
         String subscribe = getSubscribe(exchange);
         log.info("接收到订阅信息：{}", subscribe);
         Set<Channel> channels = SubscribeTableCenter.listChannelBySub(subscribe);
-        List<SubscriberInfoProto.Exchange> exs = new ArrayList<>();
-        exchange.getData().forEach(d -> {
-            SubscriberInfoProto.Exchange e = buildProtoExchange(exchange, d);
-            exs.add(e);
-        });
+        List<SubscriberInfoProto.Exchange> exs = exchange.getData().stream().map(d ->
+                buildProtoExchange(exchange, d)).collect(Collectors.toList());
         sendSubscribeBody(channels, exs, subscribe);
-
         return chain.filter(exchange);
     }
 
     /**
      * 获取msgID，db.table_id
+     *
      * @param exchange
      * @param d
      * @return
@@ -64,6 +61,7 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
 
     /**
      * 发送消息给订阅者
+     *
      * @param channels
      * @param exs
      * @param subscribe
@@ -74,7 +72,7 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
             channels.forEach(channel -> {
                 Set<String> beans = SubscribeTableCenter.listBeanAliasByChannel(channel, subscribe);
                 // 开启多个线程执行
-                executor.execute( () -> exs.forEach(exchange -> {
+                executor.execute(() -> exs.forEach(exchange -> {
                     SubscriberInfoProto.SubscriberBody subscriberBody = BodyFactory.buildSubscribeBody(beans, exchange);
                     channel.writeAndFlush(subscriberBody);
                 }));

@@ -1,6 +1,7 @@
 package com.galen.subscriber.server.canal;
 
 import com.alibaba.otter.canal.client.CanalConnector;
+import com.galen.subscriber.server.common.SubscribeTableCenter;
 import com.galen.subscriber.server.configuration.CanalConnectorConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -25,7 +26,7 @@ public class CanalClient implements DisposableBean {
 
     public static CanalConnector connector;
 
-    // 订阅表
+    // 最近一次的订阅表
     public static String lastSubscriber;
 
     @Bean
@@ -52,6 +53,18 @@ public class CanalClient implements DisposableBean {
         if (null != connector) {
             connector.disconnect();
             log.info("canal client 成功断开。");
+        }
+    }
+
+    /**
+     * 刷新订阅表
+     */
+    public static void freshCanalSubscribe() {
+        String tables = SubscribeTableCenter.getAllSubscribeTables();
+        // 判断订阅表是否发生变化，变化则刷新订阅
+        if (!tables.equals(lastSubscriber)) {
+            connector.subscribe(tables);
+            log.info("订阅表更新为：{}", tables);
         }
     }
 }

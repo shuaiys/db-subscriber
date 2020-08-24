@@ -38,6 +38,12 @@ public class SubscriberServerHandler extends SimpleChannelInboundHandler<Subscri
         ctx.fireChannelRead(body);
     }
 
+    /**
+     * 1、注册订阅表到订阅中心 {@link SubscribeTableCenter}
+     * 2、刷新canal的订阅表
+     * @param ctx
+     * @param rb
+     */
     private void handleRegister(ChannelHandlerContext ctx, SubscriberInfoProto.RegisterBody rb) {
         Map<String, String> registerTableMap = rb.getRegisterTableMap();
 
@@ -45,21 +51,15 @@ public class SubscriberServerHandler extends SimpleChannelInboundHandler<Subscri
             // 注册到订阅中心
             SubscribeTableCenter.register(ctx.channel(), registerTableMap, rb.getAppId());
             // 更新canal server订阅表
-            freshCanalSubscribe();
+            CanalClient.freshCanalSubscribe();
         }
     }
 
     /**
-     * 刷新canal server 订阅表
+     * 处理ack信息
+     * @param ctx
+     * @param ack
      */
-    private void freshCanalSubscribe() {
-        String tables = SubscribeTableCenter.getAllSubscribeTables();
-        if (!tables.equals(CanalClient.lastSubscriber)) {
-            CanalClient.connector.subscribe(tables);
-            log.info("订阅表更新为：{}", tables);
-        }
-    }
-
     private void handleAck(ChannelHandlerContext ctx, SubscriberInfoProto.ACK ack) {
 
     }
@@ -84,6 +84,8 @@ public class SubscriberServerHandler extends SimpleChannelInboundHandler<Subscri
         // 移除注册信息
         String appId = SubscribeTableCenter.geAppId(ctx.channel());
         SubscribeTableCenter.unRegister(ctx.channel());
+        // 更新canal server订阅表
+        CanalClient.freshCanalSubscribe();
         log.info("客户端[{}]断开连接，appId:{}。", ctx.channel().remoteAddress(), appId);
     }
 }

@@ -42,7 +42,7 @@ public class SubscriberClientHeartBeatHandler extends SimpleChannelInboundHandle
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, SubscriberInfoProto.SubscriberBody body) throws Exception {
         String msg = body.getHb().getMsg();
-        // 不用处理
+        log.debug(msg);
     }
 
     /**
@@ -68,5 +68,6 @@ public class SubscriberClientHeartBeatHandler extends SimpleChannelInboundHandle
             heartBeat = null;
         }
         ctx.close();
+        log.debug("心跳断开.");
     }
 }
