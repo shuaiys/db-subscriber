@@ -2,6 +2,7 @@ package com.galen.subscriber.core.util;
 
 import com.alibaba.fastjson.JSON;
 import com.galen.subscriber.core.Exchange;
+import com.galen.subscriber.core.MysqlTypeConverter;
 import com.galen.subscriber.core.proto.SubscriberInfoProto;
 import com.google.protobuf.*;
 
@@ -86,12 +87,9 @@ public class BodyConverter {
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-                Object val;
-                if (aClass == String.class) {
-                    val = v.getValue().toStringUtf8();
-                } else {
-                    val = JSON.parseObject(v.getValue().toStringUtf8(), aClass);
-                }
+                String value = v.getValue().toStringUtf8();
+                // 转换成具体的类型，时间类型使用LocalDateTime
+                Object val = MysqlTypeConverter.castValue(value, aClass);
                 ret.put(k, val);
             });
         }

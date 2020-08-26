@@ -5,6 +5,7 @@ import com.alibaba.otter.canal.protocol.CanalEntry.Entry;
 import com.alibaba.otter.canal.protocol.CanalEntry.EventType;
 import com.alibaba.otter.canal.protocol.CanalEntry.RowChange;
 import com.galen.subscriber.core.ChangeDataEntity;
+import com.galen.subscriber.core.MysqlTypeConverter;
 import com.galen.subscriber.server.common.Result;
 import com.galen.subscriber.server.common.ResultUtil;
 import com.galen.subscriber.server.filter.chain.CanalFilterChain;
@@ -94,7 +95,7 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
 
     private Map<String, Object> parseColumnsToMap(List<CanalEntry.Column> columns) {
         Map<String, Object> jsonMap = new HashMap<>();
-        columns.stream().filter(column -> column != null).forEach(column -> jsonMap.put(column.getName(), column.getValue()));
+        columns.stream().filter(column -> column != null).forEach(column -> jsonMap.put(column.getName(), MysqlTypeConverter.convert(column.getMysqlType(), column.getValue())));
         return jsonMap;
     }
 

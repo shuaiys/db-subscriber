@@ -62,7 +62,7 @@ public class SubscriberClientHandler extends SimpleChannelInboundHandler<Subscri
     private void handleSubscribe(ChannelHandlerContext ctx, SubscriberInfoProto.SubscribeBody sb) {
         ProtocolStringList beanAliasList = sb.getBeanAliasList();
         // 使用parallelStream将消息分发到具体的bean
-        beanAliasList.parallelStream().forEach(s -> {
+        beanAliasList.stream().forEach(s -> ClientConstant.executor.execute(() -> {
             Object bean = this.applicationContext.getBean(s);
             if (bean != null) {
                 DataSync ds = (DataSync) bean;
@@ -72,7 +72,7 @@ public class SubscriberClientHandler extends SimpleChannelInboundHandler<Subscri
             } else {
                 log.error("未找到bean：{}", s);
             }
-        });
+        }));
 
     }
 
