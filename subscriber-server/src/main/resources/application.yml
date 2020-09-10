@@ -14,7 +14,7 @@ spring:
 # canal server (单机客户端配置)
 canal:
   server:
-    ip: 47.244.150.124
+    ip: 127.0.0.1
     port: 11111
     # 默认订阅
-    subscribe: minifranchise_dev\..*
+    subscribe: database\..*
