@@ -1,6 +1,6 @@
 package com.galen.subscriber.client;
 
-import com.galen.subscriber.core.ACK;
+import com.galen.subscriber.core.Ack;
 import com.galen.subscriber.core.Exchange;
 
 /**
@@ -12,5 +12,11 @@ import com.galen.subscriber.core.Exchange;
  */
 public interface DataSync {
 
-    ACK doSync(Exchange exchange);
+    /**
+     * 同步接口
+     *
+     * @param exchange  更新数据
+     * @return
+     */
+    Ack doSync(Exchange exchange);
 }

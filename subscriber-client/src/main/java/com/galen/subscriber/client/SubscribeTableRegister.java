@@ -2,22 +2,23 @@ package com.galen.subscriber.client;
 
 import com.galen.subscriber.client.netty.ClientConstant;
 import com.galen.subscriber.client.netty.SubscriberNettyClient;
-import com.galen.subscriber.core.body.SubscribeInfoRegisterBody;
 import com.galen.subscriber.core.SubscriberConfig;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.context.ApplicationListener;
+import org.apache.commons.collections4.MapUtils;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.EnvironmentAware;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author shuaiys
@@ -28,7 +29,7 @@ import java.util.Set;
  */
 @Component
 @Slf4j
-public class SubscribeTableRegister implements ApplicationListener<ContextRefreshedEvent>, EnvironmentAware {
+public class SubscribeTableRegister implements ApplicationRunner, EnvironmentAware {
 
     @Resource
     private SubscriberConfig subscriberConfig;
@@ -39,36 +40,29 @@ public class SubscribeTableRegister implements ApplicationListener<ContextRefres
     private Environment environment;
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        // spring IOC容器初始化完成之后，连接Subscriber Server
-        if (event.getApplicationContext().getId().startsWith("db-subscriber")) {
-            ClientConstant.isRun = true;
-            registerSubscriberInfo();
-        }
+    public void run(ApplicationArguments args) throws Exception {
+        ClientConstant.changeRunningState(true);
+        this.registerSubscriberInfo();
     }
 
     private void registerSubscriberInfo() {
         // 获取注册表
         Map<String, String> subscribeMap = SubscribeListener.SUBSCRIBE_MAP;
-        if (null == subscribeMap || subscribeMap.isEmpty()) {
+        if (MapUtils.isEmpty(subscribeMap)) {
             log.warn("注册表为空，将不会向订阅中心注册");
             return;
         }
         ClientConstant.subscribeMap = subscribeMap;
-        String appId;
-        if (StringUtils.isBlank(subscriberConfig.getAppId())) {
-            appId = environment.getProperty("spring.application.name");
-        } else {
-            appId = subscriberConfig.getAppId();
-        }
-        ClientConstant.appId = appId;
-        connectServer();
+        ClientConstant.appId = Optional.ofNullable(this.subscriberConfig).map(SubscriberConfig::getAppId)
+                .orElse(this.environment.getProperty("spring.application.name"));
+        this.connectServer();
     }
 
     /**
      * 已经废弃该方法
      * @return
      */
+    @Deprecated
     private Channel getChannel() {
         Channel channel = ClientConstant.ctx.channel();
         if (channel == null) {
@@ -91,17 +85,16 @@ public class SubscribeTableRegister implements ApplicationListener<ContextRefres
 
     @Async
     public void connectServer() {
-        client.connect(subscriberConfig);
+        this.client.connect(this.subscriberConfig);
     }
 
-    private Set<String> getSubscribeDBInfo(Map<String, String> subscribeMap) {
-        Set<String> subscribe = new HashSet<>();
-        subscribeMap.keySet().forEach(s -> subscribe.add(subscribeMap.get(s)));
-        return subscribe;
+    private static Set<String> getSubscribeDBInfo(Map<String, String> subscribeMap) {
+        return Objects.requireNonNull(subscribeMap).keySet().stream().map(subscribeMap::get).collect(Collectors.toSet());
     }
 
     @Override
     public void setEnvironment(Environment environment) {
         this.environment = environment;
     }
+
 }

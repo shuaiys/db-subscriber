@@ -20,18 +20,21 @@ public @interface Subscriber {
 
     /**
      * 数据库名称
+     *
      * @return
      */
     String db();
 
     /**
      * 表名称
+     *
      * @return
      */
     String table();
 
     /**
      * bean的别名
+     *
      * @return
      */
     String name();
@@ -40,6 +43,7 @@ public @interface Subscriber {
 
     /**
      * 订阅的字段，默认所有字段
+     *
      * @return
      */
     String[] cloumns() default {};

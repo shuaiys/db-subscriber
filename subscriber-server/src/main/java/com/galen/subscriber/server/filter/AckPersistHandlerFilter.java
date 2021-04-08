@@ -5,8 +5,6 @@ import com.galen.subscriber.server.filter.chain.CanalFilterChain;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
-import static com.galen.subscriber.server.filter.FilterOrderConstant.PERSIST;
-
 /**
  * @author shuaiys
  * @version 1.0
@@ -20,7 +18,7 @@ import static com.galen.subscriber.server.filter.FilterOrderConstant.PERSIST;
 @Component
 public class AckPersistHandlerFilter implements CanalFilter, Ordered {
     @Override
-    public Result filter(CanalExchange exchange, CanalFilterChain chain) {
+    public Result<?> filter(CanalExchange exchange, CanalFilterChain chain) {
 
 
         return chain.filter(exchange);

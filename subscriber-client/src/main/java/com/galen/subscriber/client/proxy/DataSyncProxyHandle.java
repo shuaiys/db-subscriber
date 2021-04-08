@@ -1,7 +1,7 @@
 package com.galen.subscriber.client.proxy;
 
 import com.galen.subscriber.client.DataSync;
-import com.galen.subscriber.core.ACK;
+import com.galen.subscriber.core.Ack;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -27,13 +27,13 @@ public class DataSyncProxyHandle implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         log.info("接收到同步请求");
         Object invoke = method.invoke(target, args);
-        ACK result = (ACK) invoke;
+        Ack result = (Ack) invoke;
         // 处理ack
-        doACK(result);
+        this.doACK(result);
         return invoke;
     }
 
-    private void doACK(ACK ack) {
+    private void doACK(Ack ack) {
 
     }
 }

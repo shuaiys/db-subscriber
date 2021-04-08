@@ -1,9 +1,8 @@
 package com.galen.subscriber.client.netty;
 
 import com.galen.subscriber.client.DataSync;
-import com.galen.subscriber.core.ACK;
 import com.galen.subscriber.core.BodyTypeEnum;
-import com.galen.subscriber.core.body.ACKBody;
+import com.galen.subscriber.core.Objects;
 import com.galen.subscriber.core.proto.SubscriberInfoProto;
 import com.galen.subscriber.core.util.BodyConverter;
 import com.galen.subscriber.core.util.BodyFactory;
@@ -16,8 +15,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.ThreadPoolExecutor;
 
 
 /**
@@ -50,28 +47,26 @@ public class SubscriberClientHandler extends SimpleChannelInboundHandler<Subscri
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SubscriberInfoProto.SubscriberBody body) throws Exception {
         // 处理订阅消息
-        if (body.getTypeValue() == BodyTypeEnum.Subscribe.type) handleSubscribe(ctx, body.getSb());
+        if (body.getTypeValue() == BodyTypeEnum.Subscribe.type) {
+            this.handleSubscribe(body.getSb());
+        }
         ctx.fireChannelRead(body);
     }
 
     /**
      * 处理订阅消息
-     * @param ctx
+     *
      * @param sb
      */
-    private void handleSubscribe(ChannelHandlerContext ctx, SubscriberInfoProto.SubscribeBody sb) {
+    private void handleSubscribe(SubscriberInfoProto.SubscribeBody sb) {
         ProtocolStringList beanAliasList = sb.getBeanAliasList();
         // 使用parallelStream将消息分发到具体的bean
-        beanAliasList.stream().forEach(s -> ClientConstant.executor.execute(() -> {
+        beanAliasList.forEach(s -> ClientConstant.executor.execute(() -> {
             Object bean = this.applicationContext.getBean(s);
-            if (bean != null) {
-                DataSync ds = (DataSync) bean;
-                ds.doSync(BodyConverter.proto2Exchange(sb.getExchange()));
-                // 无需发送ack，交给代理对象
-                // ctx.channel().writeAndFlush(new ACKBody(ack));
-            } else {
-                log.error("未找到bean：{}", s);
-            }
+            DataSync ds = (DataSync) Objects.notNull(bean, "未找到目标bean，请检查注册表信息");
+            ds.doSync(BodyConverter.proto2Exchange(sb.getExchange()));
+            // 无需发送ack，交给代理对象
+            // ctx.channel().writeAndFlush(new ACKBody(ack));
         }));
 
     }

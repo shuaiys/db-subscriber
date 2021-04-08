@@ -13,5 +13,11 @@ import com.galen.subscriber.server.filter.CanalExchange;
  */
 public interface CanalFilterChain {
 
-    Result filter(CanalExchange exchange);
+    /**
+     * 过滤方法
+     *
+     * @param exchange
+     * @return
+     */
+    Result<?> filter(CanalExchange exchange);
 }

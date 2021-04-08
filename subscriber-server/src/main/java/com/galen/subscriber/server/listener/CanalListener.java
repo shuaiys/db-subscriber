@@ -1,21 +1,13 @@
 package com.galen.subscriber.server.listener;
 
 import com.alibaba.otter.canal.protocol.CanalEntry;
-import com.galen.subscriber.server.configuration.CanalBeanPostProcessor;
 import com.galen.subscriber.server.event.CanalEvent;
 import com.galen.subscriber.server.filter.CanalExchange;
-import com.galen.subscriber.server.filter.CanalFilter;
 import com.galen.subscriber.server.filter.chain.CanalFilterChain;
 import com.galen.subscriber.server.filter.chain.DefaultCanalFilterChain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
-import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author shuaiys

@@ -1,9 +1,7 @@
 package com.galen.subscriber.core.util;
 
 import com.galen.subscriber.core.proto.SubscriberInfoProto;
-import com.google.protobuf.ProtocolStringList;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +16,7 @@ public class BodyFactory {
 
     /**
      * 构建订阅表注册消息
+     *
      * @param registerTable
      * @param appId
      * @return
@@ -31,6 +30,7 @@ public class BodyFactory {
 
     /**
      * 构建心跳消息
+     *
      * @param msg
      * @return
      */
@@ -43,6 +43,7 @@ public class BodyFactory {
 
     /**
      * 构建发布订阅消息
+     *
      * @param beansAlias
      * @param exchange
      * @return

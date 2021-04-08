@@ -10,10 +10,11 @@ import com.galen.subscriber.server.configuration.ThreadPoolConfiguration;
 import com.galen.subscriber.server.filter.chain.CanalFilterChain;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,13 +34,13 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
     private static final String RELATION = "##";
 
     @Override
-    public Result filter(CanalExchange exchange, CanalFilterChain chain) {
+    public Result<?> filter(CanalExchange exchange, CanalFilterChain chain) {
         String subscribe = getSubscribe(exchange);
         log.info("接收到订阅信息：{}", subscribe);
         Set<Channel> channels = SubscribeTableCenter.listChannelBySub(subscribe);
         List<SubscriberInfoProto.Exchange> exs = exchange.getData().stream().map(d ->
                 buildProtoExchange(exchange, d)).collect(Collectors.toList());
-        sendSubscribeBody(channels, exs, subscribe);
+        this.sendSubscribeBody(channels, exs, subscribe);
         return chain.filter(exchange);
     }
 
@@ -52,7 +53,7 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
      */
     private static String getSubscribeMsgId(CanalExchange exchange, ChangeDataEntity d) {
         String subscribe = getSubscribe(exchange);
-        if (!d.getAfterColumns().isEmpty()) {
+        if (MapUtils.isNotEmpty(d.getAfterColumns())) {
             return subscribe + RELATION + d.getAfterColumns().get("id");
         } else {
             return subscribe + RELATION + d.getBeforeColumns().get("id");
@@ -67,7 +68,7 @@ public class CanalHandlerFilter implements CanalFilter, Ordered {
      * @param subscribe
      */
     private void sendSubscribeBody(Set<Channel> channels, List<SubscriberInfoProto.Exchange> exs, String subscribe) {
-        if (!channels.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(channels)) {
             ThreadPoolExecutor executor = ThreadPoolConfiguration.executor;
             channels.forEach(channel -> {
                 Set<String> beans = SubscribeTableCenter.listBeanAliasByChannel(channel, subscribe);

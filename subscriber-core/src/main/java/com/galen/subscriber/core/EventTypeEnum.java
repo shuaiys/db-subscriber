@@ -22,8 +22,14 @@ public enum EventTypeEnum {
 
     ;
 
+    /**
+     * 事件类型
+     */
     public Integer type;
 
+    /**
+     * 时间描述
+     */
     public String remark;
 
 }

@@ -125,10 +125,19 @@ public class MysqlTypeConverter {
 
         ;
 
+        /**
+         * code
+         */
         public int code;
 
+        /**
+         * 类型
+         */
         public String type;
 
+        /**
+         * 类字节码
+         */
         public Class<?> clazz;
     }
 

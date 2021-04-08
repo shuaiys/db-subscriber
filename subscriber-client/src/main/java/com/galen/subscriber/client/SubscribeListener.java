@@ -18,17 +18,17 @@ import java.util.Map;
 @Component
 public class SubscribeListener implements ApplicationListener<SubscribeEvent> {
 
-    private static final String connectString = ".";
+    private static final String CONNECT_STRING = ".";
 
     public static final Map<String, String> SUBSCRIBE_MAP = new HashMap<>();
 
     @Override
     public void onApplicationEvent(SubscribeEvent event) {
         String alias = getAlias(event.getContextId(), event.getName());
-        SUBSCRIBE_MAP.put(alias, event.getDb() + connectString + event.getTable());
+        SUBSCRIBE_MAP.put(alias, event.getDb() + CONNECT_STRING + event.getTable());
     }
 
-    private String getAlias(String contextId, String name) {
+    private static String getAlias(String contextId, String name) {
         return name + contextId + "SubscriberClient";
     }
 }

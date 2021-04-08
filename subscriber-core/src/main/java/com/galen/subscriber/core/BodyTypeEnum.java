@@ -21,8 +21,14 @@ public enum BodyTypeEnum {
 
     ;
 
+    /**
+     * 消息体类型
+     */
     public Integer type;
 
+    /**
+     * 消息体描述
+     */
     public String remark;
 
 }

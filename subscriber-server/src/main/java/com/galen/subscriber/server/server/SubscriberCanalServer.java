@@ -1,15 +1,15 @@
 package com.galen.subscriber.server.server;
 
-import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.alibaba.otter.canal.protocol.Message;
+import com.galen.subscriber.server.canal.CanalClient;
 import com.galen.subscriber.server.configuration.CanalBeanPostProcessor;
 import com.galen.subscriber.server.event.CanalEvent;
 import com.galen.subscriber.server.filter.CanalFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.OrderComparator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -27,31 +27,27 @@ import java.util.List;
  */
 @Component
 @Slf4j
-public class SubscriberCanalServer implements ApplicationListener<ContextRefreshedEvent> {
-
-    @Resource
-    private CanalConnector connector;
+public class SubscriberCanalServer implements ApplicationRunner {
 
     @Resource
     private ApplicationEventPublisher publisher;
 
-    @Resource
-    private CanalBeanPostProcessor postProcessor;
-
     private final static List<CanalFilter> filters = new ArrayList<>();
 
-    public void init() {
-        filters.addAll(postProcessor.filters);
+    public static void init() {
+        filters.addAll(CanalBeanPostProcessor.FILTERS);
         // 按照ordered接口排序
         filters.sort(OrderComparator.INSTANCE);
     }
 
-    // 单次从canal server获取的数量
-    private static Integer MSG_SIZE = 100;
+    /**
+     * 单次从canal server获取的数量
+     */
+    private static final Integer MSG_SIZE = 100;
 
     @Scheduled(fixedDelay = 1000)
     public void run() {
-        Message message = connector.getWithoutAck(MSG_SIZE);
+        Message message = CanalClient.connector.getWithoutAck(MSG_SIZE);
         long batchId = message.getId();
         try {
             List<CanalEntry.Entry> entries = message.getEntries();
@@ -63,23 +59,19 @@ public class SubscriberCanalServer implements ApplicationListener<ContextRefresh
                             try {
                                 publisher.publishEvent(new CanalEvent(entry, filters));
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                log.error("事件消费失败", e);
                             }
                         });
             }
-            connector.ack(batchId);
+            CanalClient.connector.ack(batchId);
         } catch (Exception e) {
-            e.printStackTrace();
-            connector.rollback(batchId);
-            log.error("发生异常，canal batchId 回滚， batchId={}", batchId);
+            CanalClient.connector.rollback(batchId);
+            log.error("发生异常，canal batchId 回滚， batchId={}", batchId, e);
         }
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        // spring 容器加载完成之后执行filters的初始化
-        if (event.getApplicationContext().getParent() == null) {
-            init();
-        }
+    public void run(ApplicationArguments args) throws Exception {
+        init();
     }
 }

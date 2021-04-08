@@ -9,6 +9,7 @@ import com.galen.subscriber.core.MysqlTypeConverter;
 import com.galen.subscriber.server.common.Result;
 import com.galen.subscriber.server.common.ResultUtil;
 import com.galen.subscriber.server.filter.chain.CanalFilterChain;
+import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -16,10 +17,11 @@ import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.galen.subscriber.server.filter.FilterOrderConstant.INIT;
 
 /**
  * @author shuaiys
@@ -38,7 +40,7 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
     }
 
     @Override
-    public Result filter(CanalExchange exchange, CanalFilterChain chain) {
+    public Result<?> filter(CanalExchange exchange, CanalFilterChain chain) {
         Entry entry = exchange.getEntry();
         if (null == entry) {
             return ResultUtil.setError("entry 为空");
@@ -58,10 +60,9 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
         try {
             change = RowChange.parseFrom(entry.getStoreValue());
             exchange.setEventType(change.getEventType());
-            setColumns(change, exchange);
+            this.setColumns(change, exchange);
         } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            log.error("获取RowChange失败！");
+            log.error("获取RowChange失败！", e);
         }
         if (exchange.getData().isEmpty()) {
             log.debug("Entry为空，已丢弃");
@@ -78,31 +79,32 @@ public class CanalEntryInitFilter implements CanalFilter, PriorityOrdered {
             ChangeDataEntity entity = new ChangeDataEntity();
             if (EventType.DELETE.getNumber() == eventType) {
                 // 删除之前的数据
-                entity.setBeforeColumns(parseColumnsToMap(r.getBeforeColumnsList()));
+                entity.setBeforeColumns(this.parseColumnsToMap(r.getBeforeColumnsList()));
             } else if (EventType.INSERT.getNumber() == eventType) {
                 // 插入之后的数据
-                entity.setAfterColumns(parseColumnsToMap(r.getAfterColumnsList()));
+                entity.setAfterColumns(this.parseColumnsToMap(r.getAfterColumnsList()));
             } else {
                 // 修改之前和之后的数据
-                entity.setBeforeColumns(parseColumnsToMap(r.getBeforeColumnsList()));
-                entity.setAfterColumns(parseColumnsToMap(r.getAfterColumnsList()));
+                entity.setBeforeColumns(this.parseColumnsToMap(r.getBeforeColumnsList()));
+                entity.setAfterColumns(this.parseColumnsToMap(r.getAfterColumnsList()));
                 // 存储修改过的字段名
-                entity.setUpdateColumns(updateColumns(r.getAfterColumnsList()));
+                entity.setUpdateColumns(this.updateColumns(r.getAfterColumnsList()));
             }
             exchange.getData().add(entity);
         });
     }
 
     private Map<String, Object> parseColumnsToMap(List<CanalEntry.Column> columns) {
-        Map<String, Object> jsonMap = new HashMap<>();
-        columns.stream().filter(column -> column != null).forEach(column -> jsonMap.put(column.getName(), MysqlTypeConverter.convert(column.getMysqlType(), column.getValue())));
+        Map<String, Object> jsonMap = Maps.newHashMap();
+        columns.stream().filter(Objects::nonNull).forEach(column -> jsonMap.put(column.getName(), MysqlTypeConverter.convert(column.getMysqlType(), column.getValue())));
         return jsonMap;
     }
 
     private Set<String> updateColumns(List<CanalEntry.Column> columns) {
         Set<String> updates = columns.stream()
-                .filter(column -> column != null && column.getUpdated())
-                .map(column -> column.getName())
+                .filter(Objects::nonNull)
+                .filter(CanalEntry.Column::getUpdated)
+                .map(CanalEntry.Column::getName)
                 .collect(Collectors.toSet());
         return updates;
     }

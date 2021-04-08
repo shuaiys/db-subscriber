@@ -1,6 +1,5 @@
 package com.galen.subscriber.server;
 
-import com.galen.subscriber.server.netty.SubscriberNettyServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -22,11 +21,5 @@ public class SubscriberApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SubscriberApplication.class, args);
-        try {
-            // 启动netty server
-            SubscriberNettyServer.run();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }

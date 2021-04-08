@@ -1,14 +1,17 @@
 package com.galen.subscriber.core.util;
 
-import com.alibaba.fastjson.JSON;
 import com.galen.subscriber.core.Exchange;
 import com.galen.subscriber.core.MysqlTypeConverter;
 import com.galen.subscriber.core.proto.SubscriberInfoProto;
-import com.google.protobuf.*;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
+import org.apache.commons.collections4.MapUtils;
 
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author shuaiys
@@ -18,7 +21,6 @@ import java.util.stream.Collectors;
  * @date 2020-05-25 23:02
  */
 public class BodyConverter {
-
     /**
      * protobuf Obj转换成 {@link Exchange}
      * @param exchange
@@ -60,8 +62,8 @@ public class BodyConverter {
      * @return
      */
     public static Map<String, Any> packAnyFromObj(Map<String, Object> map) {
-        Map<String, Any> anyMap = new HashMap<>();
-        if (null != map && !map.isEmpty()) {
+        Map<String, Any> anyMap = new HashMap<>(map.size());
+        if (MapUtils.isNotEmpty(map)) {
             map.forEach((k, v) -> {
                 Any any = Any.newBuilder().setTypeUrl(v.getClass().getCanonicalName()).setValue(ByteString.copyFromUtf8(String.valueOf(v))).build();
                 anyMap.put(k, any);
@@ -77,8 +79,8 @@ public class BodyConverter {
      * @return
      */
     public static Map<String, Object> unPackFromAny(Map<String, Any> anyMap) {
-        Map<String, Object> ret = new HashMap<>();
-        if (null != anyMap && !anyMap.isEmpty()) {
+        Map<String, Object> ret = new HashMap<>(anyMap.size());
+        if (MapUtils.isNotEmpty(anyMap)) {
             anyMap.forEach((k, v) -> {
                 String typeUrl = v.getTypeUrl();
                 Class<?> aClass = String.class;

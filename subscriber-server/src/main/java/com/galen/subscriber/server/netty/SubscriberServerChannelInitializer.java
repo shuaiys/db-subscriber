@@ -25,7 +25,7 @@ public class SubscriberServerChannelInitializer extends ChannelInitializer<Socke
                 .addLast(new ProtobufVarint32LengthFieldPrepender())
                 .addLast(new ProtobufEncoder())
                 // 50s内没有读操作，断开连接
-                .addLast(new ReadTimeoutHandler(10))
+                .addLast(new ReadTimeoutHandler(50))
                 .addLast(new SubscriberServerHandler())
                 .addLast(new SubscriberServerHeartBeatHandler());
     }

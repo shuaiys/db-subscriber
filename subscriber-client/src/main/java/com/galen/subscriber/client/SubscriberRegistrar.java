@@ -45,15 +45,10 @@ public class SubscriberRegistrar implements ImportBeanDefinitionRegistrar, Resou
     private void registerSubscriber(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
         ClassPathScanningCandidateComponentProvider scanner = getScanner();
         scanner.setResourceLoader(this.resourceLoader);
-
-//        Map<String, Object> attrs = metadata
-//                .getAnnotationAttributes(EnableSubscriber.class.getName());
-
         // 添加扫描器，扫描所有 @Subscriber注解
         AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(
                 Subscriber.class);
         scanner.addIncludeFilter(annotationTypeFilter);
-
         // 获取到所有需要扫描的包路径
         Set<String> basePackages = getBasePackages(metadata);
 
@@ -62,12 +57,10 @@ public class SubscriberRegistrar implements ImportBeanDefinitionRegistrar, Resou
                     .findCandidateComponents(basePackage);
             for (BeanDefinition candidateComponent : candidateComponents) {
                 if (candidateComponent instanceof AnnotatedBeanDefinition) {
-                    // verify annotated class is an interface
                     AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
                     AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
                     Assert.isTrue(!annotationMetadata.isInterface(),
                             "@Subscriber 注解不能标注接口");
-
                     Map<String, Object> attributes = annotationMetadata
                             .getAnnotationAttributes(
                                     Subscriber.class.getCanonicalName());
@@ -84,14 +77,14 @@ public class SubscriberRegistrar implements ImportBeanDefinitionRegistrar, Resou
         // 注册一个代理对象
         BeanDefinitionBuilder definition = BeanDefinitionBuilder
                 .genericBeanDefinition(SubscriberFactoryBean.class);
-        String name = getSubscriberName(attributes);
+        String name = this.getSubscriberName(attributes);
         definition.addPropertyValue("name", name);
-        String contextId = getContextId(attributes);
+        String contextId = this.getContextId(attributes);
         definition.addPropertyValue("contextId", contextId);
         definition.addPropertyValue("type", className);
-        String db = getDB(attributes);
+        String db = this.getDB(attributes);
         definition.addPropertyValue("db", db);
-        String table = getTable(attributes);
+        String table = this.getTable(attributes);
         definition.addPropertyValue("table", table);
 
         /**
@@ -103,7 +96,7 @@ public class SubscriberRegistrar implements ImportBeanDefinitionRegistrar, Resou
         String alias = name + contextId + "SubscriberClient";
         AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
 
-        boolean primary = (Boolean) attributes.get("primary"); // has a default, won't be null
+        boolean primary = (Boolean) attributes.get("primary");
 
         beanDefinition.setPrimary(primary);
 

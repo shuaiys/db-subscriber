@@ -1,14 +1,14 @@
 package com.galen.subscriber.server.common;
 
-import com.google.common.collect.Sets;
 import io.netty.channel.Channel;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author shuaiys
@@ -98,15 +98,13 @@ public class SubscribeTableCenter {
      */
     @Deprecated
     public static Channel getChannelByAppId(String appId) {
-        Channel channel = null;
         String channelId = appChannels.search(1L, (k, v) -> {
             if (v.equals(appId)) {
                 return k;
             }
             return null;
         });
-        if (channelId != null) channel = channels.get(channelId);
-        return channel;
+        return Optional.ofNullable(channelId).map(channels::get).orElse(null);
     }
 
     /**
@@ -117,7 +115,7 @@ public class SubscribeTableCenter {
      */
     public static Set<Channel> listChannelBySub(String subTable) {
         Set<Channel> chs = new HashSet<>();
-        if (!tables.isEmpty()) {
+        if (MapUtils.isNotEmpty(tables)) {
             Set<String> strings = tables.get(subTable);
             strings.forEach(s -> chs.add(channels.get(s)));
         }
@@ -166,7 +164,7 @@ public class SubscribeTableCenter {
     public static String getAllSubscribeTables() {
         Set<String> tbs = listAllSubscribeTables();
         StringBuilder builder = new StringBuilder();
-        if (!tbs.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(tbs)) {
             tbs.forEach(s -> builder.append(s).append(","));
             builder.deleteCharAt(builder.length() - 1);
         }
@@ -181,15 +179,13 @@ public class SubscribeTableCenter {
     private static void removeSubscribeTable(String channelId) {
 
         tables.forEach((k, v) -> {
-            if (v.contains(channelId)) {
-                v.remove(channelId);
-            }
+            v.remove(channelId);
             if (v.isEmpty()) {
                 tables.remove(k);
             }
         });
 
-        if (!channelBeans.isEmpty()) {
+        if (MapUtils.isNotEmpty(channelBeans)) {
             channelBeans.forEach((k, v) -> {
                 if (containsChannelId(channelId, k)) {
                     channelBeans.remove(k);
@@ -201,10 +197,7 @@ public class SubscribeTableCenter {
 
 
     private static boolean containsChannelId(String channelId, String key) {
-        if (key.split(RELATION)[1].equals(channelId)) {
-            return true;
-        }
-        return false;
+        return key.split(RELATION)[1].equals(channelId);
     }
 
     /**
@@ -223,18 +216,11 @@ public class SubscribeTableCenter {
      * @param table
      */
     private static void saveSubscribeTable(Channel channel, Map<String, String> table) {
-        if (table != null && !table.isEmpty()) {
+        if (MapUtils.isNotEmpty(table)) {
             String channelId = getChannelId(channel);
             table.forEach((k, v) -> {
-                // 已存在该订阅表
-                if (tables.containsKey(v)) {
-                    // channel加入channelTable
-                    tables.get(v).add(channelId);
-                    bindChannelBean(channelId, k, v);
-                } else {
-                    tables.put(v, Sets.newHashSet(channelId));
-                    bindChannelBean(channelId, k, v);
-                }
+                tables.computeIfAbsent(v, kk -> new HashSet<>()).add(channelId);
+                bindChannelBean(channelId, k, v);
             });
         }
     }
@@ -248,11 +234,7 @@ public class SubscribeTableCenter {
     private static void bindChannelBean(String channelId, String beanAlias, String subTable) {
         // 已绑定channel和bean
         String key = getChannelBeanKey(subTable, channelId);
-        if (channelBeans.containsKey(key)) {
-            channelBeans.get(key).add(beanAlias);
-        } else {
-            channelBeans.put(key, Sets.newHashSet(beanAlias));
-        }
+        channelBeans.computeIfAbsent(key, k -> new HashSet<>()).add(beanAlias);
     }
 
     private static void saveChannel(Channel channel) {

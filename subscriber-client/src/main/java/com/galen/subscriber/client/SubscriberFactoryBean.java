@@ -11,7 +11,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * @author shuaiys
  * @version 1.0
  * @package com.galen.subscriber.client
- * @description 使用 {@link com.galen.subscriber.client.annotation.Subscriber}  注解标注的类将会被代理
+ * @description 使用 {@link com.galen.subscriber.client.annotation.Subscriber} 注解标注的类将会被代理
  * @date 2020-05-18 23:25
  */
 @Data

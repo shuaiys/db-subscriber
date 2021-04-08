@@ -34,7 +34,7 @@ public class SubscriberClientHeartBeatHandler extends SimpleChannelInboundHandle
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         this.channel = ctx.channel();
         // 激活成功，客户端主动发送心跳
-        heartBeat = ctx.executor().scheduleAtFixedRate(this::run, 0, 5000, TimeUnit.MILLISECONDS);
+        this.heartBeat = ctx.executor().scheduleAtFixedRate(this, 0, 5000, TimeUnit.MILLISECONDS);
 
         ctx.fireChannelActive();
     }
@@ -51,7 +51,7 @@ public class SubscriberClientHeartBeatHandler extends SimpleChannelInboundHandle
     @Override
     public void run() {
         SubscriberInfoProto.SubscriberBody heartBeatBody = BodyFactory.buildHeartBeatBody(PING);
-        channel.writeAndFlush(heartBeatBody);
+        this.channel.writeAndFlush(heartBeatBody);
     }
 
     @Override
@@ -63,9 +63,9 @@ public class SubscriberClientHeartBeatHandler extends SimpleChannelInboundHandle
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         // 异常退出心跳
-        if (heartBeat != null) {
-            heartBeat.cancel(true);
-            heartBeat = null;
+        if (this.heartBeat != null) {
+            this.heartBeat.cancel(true);
+            this.heartBeat = null;
         }
         ctx.close();
         log.debug("心跳断开.");

@@ -1,6 +1,6 @@
 package com.galen.subscriber.core.body;
 
-import com.galen.subscriber.core.ACK;
+import com.galen.subscriber.core.Ack;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -13,9 +13,9 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class ACKBody extends BaseBody{
+public class AckBody extends BaseBody{
     private static final long serialVersionUID = -2796372188242127576L;
 
-    private ACK ack;
+    private Ack ack;
 
 }

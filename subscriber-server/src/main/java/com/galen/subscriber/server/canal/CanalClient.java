@@ -5,7 +5,7 @@ import com.galen.subscriber.server.common.SubscribeTableCenter;
 import com.galen.subscriber.server.configuration.CanalConnectorConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -19,29 +19,31 @@ import javax.annotation.Resource;
  */
 @Component
 @Slf4j
-public class CanalClient implements DisposableBean {
+public class CanalClient implements InitializingBean, DisposableBean {
 
     @Resource
     private CanalConnectorConfiguration connectorConfiguration;
 
     public static CanalConnector connector;
 
-    // 最近一次的订阅表
-    public static String lastSubscriber;
+    /**
+     * 最近一次的订阅表
+     */
+    public static String lastSubscribeTable;
 
-    @Bean
-    public CanalConnector canalConnector() {
-        connector = connectorConfiguration.getConnectorConfig();
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        connector = this.connectorConfiguration.getConnectorConfig();
         // 开启连接
         connector.connect();
         // 订阅
-        connector.subscribe(connectorConfiguration.getSubscribe());
+        connector.subscribe(this.connectorConfiguration.getSubscribe());
 
-        lastSubscriber = connectorConfiguration.getSubscribe();
+        lastSubscribeTable = this.connectorConfiguration.getSubscribe();
         // 回滚到上次订阅的位置
         connector.rollback();
         log.info("canal 客户端启动成功！");
-        return connector;
     }
 
     /**
@@ -62,9 +64,10 @@ public class CanalClient implements DisposableBean {
     public static void freshCanalSubscribe() {
         String tables = SubscribeTableCenter.getAllSubscribeTables();
         // 判断订阅表是否发生变化，变化则刷新订阅
-        if (!tables.equals(lastSubscriber)) {
+        if (!tables.equals(lastSubscribeTable)) {
             connector.subscribe(tables);
             log.info("订阅表更新为：{}", tables);
         }
     }
+
 }

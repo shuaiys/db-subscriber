@@ -1,6 +1,6 @@
 package com.galen.subscriber.client.proxy;
 
-import com.galen.subscriber.core.ACK;
+import com.galen.subscriber.core.Ack;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -21,7 +21,7 @@ public class DataSyncMethodInterceptor implements MethodInterceptor {
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
         log.debug("接收到同步请求");
         Object result = methodProxy.invokeSuper(o, objects);
-        doSync(result);
+        this.doSync(result);
         return result;
     }
 
@@ -30,8 +30,8 @@ public class DataSyncMethodInterceptor implements MethodInterceptor {
      * @param result
      */
     private void doSync(Object result) {
-        if (result instanceof ACK) {
-            ACK ack = (ACK) result;
+        if (result instanceof Ack) {
+            Ack ack = (Ack) result;
         }
     }
 }

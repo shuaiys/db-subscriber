@@ -1,6 +1,7 @@
 package com.galen.subscriber.client;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.context.ApplicationEvent;
 
 /**

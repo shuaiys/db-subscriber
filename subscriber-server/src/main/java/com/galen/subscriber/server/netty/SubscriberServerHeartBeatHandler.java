@@ -20,7 +20,9 @@ public class SubscriberServerHeartBeatHandler extends SimpleChannelInboundHandle
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, SubscriberInfoProto.SubscriberBody body) throws Exception {
-        if (body.hasHb()) handlerHeartBeat(ctx, body.getHb());
+        if (body.hasHb()) {
+            this.handlerHeartBeat(ctx, body.getHb());
+        }
     }
 
     private void handlerHeartBeat(ChannelHandlerContext ctx, SubscriberInfoProto.HeartBate hb) {

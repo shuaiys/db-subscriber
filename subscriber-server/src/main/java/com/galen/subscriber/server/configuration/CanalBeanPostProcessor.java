@@ -20,14 +20,16 @@ import java.util.List;
 @Slf4j
 public class CanalBeanPostProcessor implements BeanPostProcessor {
 
-    // filter集合
-    public final static List<CanalFilter> filters = new ArrayList<>();
+    /**
+     * filter集合
+     */
+    public final static List<CanalFilter> FILTERS = new ArrayList<>();
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof CanalFilter) {
             // canal filter将会被加入filters
-            filters.add((CanalFilter) bean);
+            FILTERS.add((CanalFilter) bean);
             log.info("canal filter [{}] added to chain", beanName);
         }
         return bean;

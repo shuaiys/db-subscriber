@@ -20,18 +20,40 @@ import java.util.Set;
 @Accessors(chain = true)
 public class Exchange implements Serializable {
     private static final long serialVersionUID = 4535320077292222744L;
+
+    /**
+     * 数据库名
+     */
     private String database;
 
+    /**
+     * 表名
+     */
     private String tableName;
 
-    private int eventType; // 1-INSERT、2-UPDATE、3-DELETE
+    /**
+     * 1-INSERT、2-UPDATE、3-DELETE
+     */
+    private int eventType;
 
+    /**
+     * 更新之前的字段
+     */
     private Map<String, Object> beforeColumns = new HashMap<>();
 
+    /**
+     * 更新之后的字段
+     */
     private Map<String, Object> afterColumns = new HashMap<>();
 
+    /**
+     * 更新的字段
+     */
     private Set<String> updateColumns = new HashSet<>();
 
+    /**
+     * 操作执行的时间戳
+     */
     private long executeTime;
 
 }

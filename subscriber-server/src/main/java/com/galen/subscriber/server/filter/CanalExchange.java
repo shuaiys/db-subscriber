@@ -30,7 +30,10 @@ public class CanalExchange implements Serializable {
 
     private List<ChangeDataEntity> data = new ArrayList<>();
 
-    private Map<String, Object> params; // 预留自定义
+    /**
+     * 保留字段
+     */
+    private Map<String, Object> params;
 
     private long executeTime;
 }

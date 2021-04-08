@@ -1,5 +1,7 @@
 package com.galen.subscriber.client.netty;
 
+import com.galen.subscriber.client.current.NamedThreadFactory;
+import com.galen.subscriber.core.Objects;
 import com.galen.subscriber.core.SubscriberConfig;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -13,8 +15,10 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author shuaiys
@@ -30,14 +34,27 @@ public class SubscriberNettyClient implements DisposableBean {
     @Resource
     private SubscriberChannelInitializer initializer;
 
-    private volatile boolean start = false;
+    private final static AtomicBoolean STARTING = new AtomicBoolean(false);
 
-    private static Object lock = new Object();
+    private final static Object LOCK = new Object();
 
+    private final static ThreadPoolExecutor CLIENT_EXECUTOR;
+
+    static {
+        CLIENT_EXECUTOR = new ThreadPoolExecutor(1, 1, 100L,
+                TimeUnit.SECONDS, new ArrayBlockingQueue<>(1), new NamedThreadFactory("subscriber client launcher"));
+        // 拒绝策略，由当前线程执行任务
+        CLIENT_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+    }
+
+    /**
+     * 开启线程
+     *
+     * @param config
+     */
     public void connect(SubscriberConfig config) {
         checkConfig(config);
-        ThreadPoolExecutor executor = ClientConstant.executor;
-        executor.execute(() -> {
+        CLIENT_EXECUTOR.execute(() -> {
             // 连接服务端
             try {
                 this.connect(config.getPort(), config.getIp());
@@ -47,15 +64,16 @@ public class SubscriberNettyClient implements DisposableBean {
         });
     }
 
-    private void checkConfig(SubscriberConfig config) {
-        if (null == config || StringUtils.isBlank(config.getIp()) || null == config.getPort()) {
-            throw new IllegalArgumentException("subscriber.server 未设置或设置不正确");
-        }
+    private static void checkConfig(SubscriberConfig config) {
+        Objects.isNotNull(config).or(StringUtils.isBlank(config.getIp())).or(null == config.getPort())
+                .ifMatch(() -> {
+                    throw new IllegalArgumentException("subscriber.server 未设置或设置不正确");
+                });
     }
 
     public void connect(int port, String host) throws InterruptedException {
-        synchronized (this.lock) {
-            if (this.start) {
+        synchronized (LOCK) {
+            if (STARTING.get()) {
                 log.warn("客户端已经启动。");
                 return;
             }
@@ -64,28 +82,24 @@ public class SubscriberNettyClient implements DisposableBean {
                 Bootstrap b = new Bootstrap();
                 b.group(group).channel(NioSocketChannel.class)
                         .option(ChannelOption.TCP_NODELAY, true)
-                        .handler(initializer);
+                        .handler(this.initializer);
                 ChannelFuture f = b.connect(host, port).sync();
                 log.info("Subscriber Client启动成功");
-                this.start = true;
+                STARTING.compareAndSet(false, true);
                 f.channel().closeFuture().sync();
             } finally {
-                this.start = false;
+                STARTING.compareAndSet(true, false);
                 group.shutdownGracefully();
                 // 客户端断开自动重连
-                if (ClientConstant.isRun) {
-                    ClientConstant.executor.execute(() -> {
+                if (ClientConstant.running) {
+                    CLIENT_EXECUTOR.execute(() -> {
                         try {
                             // 5s重连
                             TimeUnit.SECONDS.sleep(5);
+                            log.info("客户端重连...");
+                            this.connect(port, host);
                         } catch (InterruptedException e) {
                             // ignore
-                        }
-                        try {
-                            log.info("客户端重连...");
-                            connect(port, host);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
                         }
                     });
                 }
@@ -96,7 +110,20 @@ public class SubscriberNettyClient implements DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        // 关闭管道
+        ClientConstant.changeRunningState(false);
+        // 清空缓存
         ClientConstant.closeCtx();
+        while (true) {
+            try {
+                // 关闭线程池
+                CLIENT_EXECUTOR.shutdown();
+                if (!CLIENT_EXECUTOR.awaitTermination(1, TimeUnit.SECONDS)) {
+                    continue;
+                }
+                break;
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
     }
 }

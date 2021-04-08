@@ -33,7 +33,7 @@ public class DefaultCanalFilterChain implements CanalFilterChain {
     }
 
     @Override
-    public Result filter(CanalExchange exchange) {
+    public Result<?> filter(CanalExchange exchange) {
         if (this.size < this.filters.size()) {
             CanalFilter canalFilter = this.filters.get(this.size);
             DefaultCanalFilterChain filterChain = new DefaultCanalFilterChain(this.size + 1, this);
