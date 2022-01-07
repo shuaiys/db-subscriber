@@ -30,7 +30,7 @@
         <log4j.version>1.2.17</log4j.version>
         <lombok.version>1.18.12</lombok.version>
         <netty.version>4.1.42.Final</netty.version>
-        <protobuf-java.version>3.7.1</protobuf-java.version>
+        <protobuf-java.version>3.16.1</protobuf-java.version>
     </properties>
 
     <dependencies>
